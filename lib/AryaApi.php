@@ -8,6 +8,8 @@
 
 namespace Blogging;
 
+use WP_REST_Request;
+
 class AryaApi
 {
     public static function registerEndpoints() {
@@ -17,8 +19,12 @@ class AryaApi
         ]);
     }
 
-    protected static function createPost($request) {
-        $post = (object) $request->get_params();
+    public static function createPost(WP_REST_Request $request) {
+        $post = (object) $request->get_body_params();
+
+        if(empty((array) $post)) {
+            return ['error' => 'Complete fields first'];
+        }
 
         if(!AryaWp::isAllowToCreatePost($post)) {
             return ['error' => 'The JWT auth code isn\'t correct'];
