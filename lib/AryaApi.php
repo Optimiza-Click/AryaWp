@@ -20,6 +20,7 @@ class AryaApi
     }
 
     public static function createPost(WP_REST_Request $request) {
+
         $post = (object) $request->get_body_params();
 
         if(empty((array) $post)) {
