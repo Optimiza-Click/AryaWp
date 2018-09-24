@@ -1,0 +1,13 @@
+{
+  "name": "wordpress/arya-wp",
+  "type": "wordpress-plugin",
+  "description": "Plugin to manage flamingo conctacts",
+  "autoload": {
+    "psr-4": {
+      "Blogging\\": "lib/"
+    }
+  },
+  "require": {
+    "php": ">=7.1"
+  }
+}
