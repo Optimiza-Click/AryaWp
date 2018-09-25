@@ -8,7 +8,7 @@
 
 namespace Blogging;
 
-use Auth\JwtAuth;
+use JWT;
 
 class AryaWp
 {
@@ -19,9 +19,24 @@ class AryaWp
 
     public static function isAllowToCreatePost($request) {
         try {
-            JwtAuth::isValidToken($request->key, 'arya_wp');
+            self::isValidToken($request->key, $request->auth);
         }catch (\Exception $e){
             return ['request' => $e->getMessage()];
+        }
+    }
+
+    public static function isValidToken($jwt, $stringValidation)
+    {
+        if(empty($jwt)){
+            throw new \Exception ("Missing token");
+        }
+
+        $key = file_get_contents('key.txt', FILE_USE_INCLUDE_PATH);
+
+        $decoded = JWT::decode($jwt, $key, ['RS256']);
+
+        if($decoded !== $stringValidation){
+            throw new \Exception ("Token not valid");
         }
     }
 }

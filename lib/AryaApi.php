@@ -27,7 +27,7 @@ class AryaApi
             return ['result' => false, 'error' => 'Complete fields first'];
         }
 
-        if(!AryaWp::isAllowToCreatePost($post)) {
+        if(!AryaWp::isAllowToCreatePost($post->auth)) {
             return ['result' => false, 'error' => 'The JWT auth code isn\'t correct'];
         }
 
