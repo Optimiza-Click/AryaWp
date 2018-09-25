@@ -12,11 +12,30 @@ use WP_REST_Request;
 
 class AryaApi
 {
-    public static function registerEndpoints() {
+    public static function registerEndpoints()
+    {
         register_rest_route('arya/v1', '/posts/', [
             'methods' => 'POST',
             'callback' => [self::class, 'createPost'],
         ]);
+
+        register_rest_route('arya/v1',  '/posts/image', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'createImageByUrl'],
+        ]);
+    }
+
+    public static function createImageByUrl(WP_REST_Request $request) {
+        $image_url = $request->get_param('image_url');
+        $fileType = wp_check_filetype( basename( $image_url ), null );
+
+        $attachment = [
+            'guid'           => $image_url,
+            'post_mime_type' => $fileType['type'],
+            'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $image_url ) )
+        ];
+
+        return ['result' => wp_insert_attachment( $attachment, $image_url )];
     }
 
     public static function createPost(WP_REST_Request $request) {
