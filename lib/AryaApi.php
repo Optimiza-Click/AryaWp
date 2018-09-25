@@ -24,11 +24,11 @@ class AryaApi
         $post = (object) $request->get_body_params();
 
         if(empty((array) $post)) {
-            return ['error' => 'Complete fields first'];
+            return ['result' => false, 'error' => 'Complete fields first'];
         }
 
         if(!AryaWp::isAllowToCreatePost($post)) {
-            return ['error' => 'The JWT auth code isn\'t correct'];
+            return ['result' => false, 'error' => 'The JWT auth code isn\'t correct'];
         }
 
         $id = wp_insert_post([
@@ -40,15 +40,15 @@ class AryaApi
         ]);
 
         if(!$id) {
-            return ['error' => $id];
+            return ['result' => false, 'error' => $id];
         }
 
         $imageId = set_post_thumbnail( $id,  $post->image_id);
 
         if(!$imageId) {
-            return ['error' => $imageId];
+            return ['result' => false, 'error' => $imageId];
         }
 
-        return ['result' => true];
+        return ['result' => true, 'id' => $id];
     }
 }
