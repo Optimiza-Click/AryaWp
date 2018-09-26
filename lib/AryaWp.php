@@ -39,4 +39,13 @@ class AryaWp
             throw new \Exception ("Token not valid");
         }
     }
+
+    public static function createImageFromRemoteUrl($imageUrl) {
+        $body = wp_remote_retrieve_body(wp_remote_get( $imageUrl, array( 'timeout' => 8 ) ));
+
+        $filename = wp_upload_dir()['path'] . '/' . basename($imageUrl);
+        file_put_contents($filename, $body);
+
+        return (object) wp_upload_bits(basename($imageUrl), null, file_get_contents($filename));
+    }
 }

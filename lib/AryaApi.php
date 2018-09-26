@@ -27,15 +27,32 @@ class AryaApi
 
     public static function createImageByUrl(WP_REST_Request $request) {
         $image_url = $request->get_param('image_url');
-        $fileType = wp_check_filetype( basename( $image_url ), null );
+        $image = AryaWp::createImageFromRemoteUrl($image_url);
+
+        if(!$image) {
+            return ['result' => false, 'error' => $image];
+        }
 
         $attachment = [
-            'guid'           => $image_url,
-            'post_mime_type' => $fileType['type'],
-            'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $image_url ) )
+            'guid' => $image->url,
+            'post_title' => basename($image->file),
+            'post_mime_type' => $image->type,
         ];
 
-        return ['result' => wp_insert_attachment( $attachment, $image_url )];
+        $id = wp_insert_attachment( $attachment, $image->file, 0);
+
+        if(!$id) {
+            return ['result' => false, 'error' => $id];
+        }
+
+        //i hate wordpress, i'm hating wordpress and i will hate wordpress :)
+        if (!function_exists('wp_generate_attachment_metadata')) {
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+        }
+
+        update_post_meta($id, '_wp_attachment_metadata', wp_generate_attachment_metadata($id, $image->file));
+
+        return ['result' => true, 'id' => $id];
     }
 
     public static function createPost(WP_REST_Request $request) {
@@ -55,7 +72,6 @@ class AryaApi
             'post_excerpt' => $post->excerpt,
             'post_status' => $post->status,
             'post_content' => $post->content,
-            'post_type' => 'post'
         ]);
 
         if(!$id) {
@@ -68,6 +84,6 @@ class AryaApi
             return ['result' => false, 'error' => $imageId];
         }
 
-        return ['result' => true, 'id' => $id];
+        return ['result' => true, 'id' => $id, 'url' => get_permalink($id)];
     }
 }
