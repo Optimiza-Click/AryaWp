@@ -2,19 +2,43 @@
 Plugin to manage the wordpress posts via API with JWT authentication.
 
 ### How use it?
-* If we want set a thumbnail in a post, we must upload the image first into a gallery; if you can know the parameters visit "https://v2.wp-api.org/reference/media/". It'll return the id of image that we'll use later.
+ If we want set a thumbnail in a post, we must upload the image first into a gallery.
+
+#### To upload the image:
 ```
-POST http://example.com/wp-json/wp/v2/media/
+POST http://example.com/wp-json/arya/v1/posts/image
 ```
-* To upload the post we use this endpoint.
+
+| Title  | Type  |  Description |
+|---|---|---|
+| image_url  | string  | the url of the image |
+
+###### SUCCESS 200: EXAMPLE
 ```
 {
-    title: <string>'example title',
-    excerpt: <string>'example_excerpt',
-    status: <string>'example_status',
-    content: <string>'example_status'
-    image_id: <number>2
+  result: true,
+  id: 18
 }
+```
 
+####  To upload the post we use this endpoint.
+```
 POST http://example.com/wp-json/arya/v1/posts
+```
+
+| Title  | Type  |  Description |
+|---|---|---|
+| title  | string  | title of post |
+| excerpt  | string  | a little description of content |
+| status  | string  | will be publish or draft |
+| content  | string  | the content of post |
+| image_id  | number  | the id of the image uploaded previusly |
+
+###### SUCCESS 200: EXAMPLE
+```
+{
+  result: true,
+  id: 15,
+  url: 'http://example.com/post_example'
+}
 ```
