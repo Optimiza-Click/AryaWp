@@ -27,6 +27,11 @@ class AryaApi
 
     public static function createImageByUrl(WP_REST_Request $request) {
         $image_url = $request->get_param('image_url');
+
+        if(!$image_url) {
+            return ['result' => false, 'error' => 'please send image url in the request'];
+        }
+
         $image = AryaWp::createImageFromRemoteUrl($image_url);
 
         if(!$image) {
@@ -45,7 +50,7 @@ class AryaApi
             return ['result' => false, 'error' => $id];
         }
 
-        //i hate wordpress, i'm hating wordpress and i will hate wordpress :)
+        // i'm hating wordpress and i will hate wordpress :)
         if (!function_exists('wp_generate_attachment_metadata')) {
             require_once ABSPATH . 'wp-admin/includes/image.php';
         }
@@ -78,11 +83,7 @@ class AryaApi
             return ['result' => false, 'error' => $id];
         }
 
-        $imageId = set_post_thumbnail( $id,  $post->image_id);
-
-        if(!$imageId) {
-            return ['result' => false, 'error' => $imageId];
-        }
+        set_post_thumbnail( $id,  $post->image_id);
 
         return ['result' => true, 'id' => $id, 'url' => get_permalink($id)];
     }
