@@ -12,27 +12,33 @@ use WP_REST_Request;
 
 class AryaApi
 {
-    public static function registerEndpoints()
+    public function registerEndpoints()
     {
         register_rest_route('arya/v1', '/posts/', [
             'methods' => 'POST',
-            'callback' => [self::class, 'createPost'],
+            'callback' => [$this, 'createPost'],
         ]);
 
         register_rest_route('arya/v1',  '/posts/image', [
             'methods' => 'POST',
-            'callback' => [self::class, 'createImageByUrl'],
+            'callback' => [$this, 'createImageByUrl'],
+        ]);
+
+        register_rest_route('arya/v1',  '/ping', [
+            'methods' => 'GET',
+            'callback' => [$this, 'checkStatus'],
         ]);
     }
 
-    public static function createImageByUrl(WP_REST_Request $request) {
-        $image_url = $request->get_param('image_url');
+    public function createImageByUrl(WP_REST_Request $request)
+    {
+        $parameters = (object) $request->get_params();
 
-        if(!$image_url) {
+        if(!$parameters->image_url) {
             return ['result' => false, 'error' => 'please send image url in the request'];
         }
 
-        $image = AryaWp::createImageFromRemoteUrl($image_url);
+        $image = AryaWp::createImageFromRemoteUrl($parameters->image_url);
 
         if(!$image) {
             return ['result' => false, 'error' => $image];
@@ -40,7 +46,8 @@ class AryaApi
 
         $attachment = [
             'guid' => $image->url,
-            'post_title' => basename($image->file),
+            'post_title' => $parameters->title ?? basename($image->file),
+            'post_content' => $parameters->description ?? null,
             'post_mime_type' => $image->type,
         ];
 
@@ -60,8 +67,8 @@ class AryaApi
         return ['result' => true, 'id' => $id];
     }
 
-    public static function createPost(WP_REST_Request $request) {
-
+    public function createPost(WP_REST_Request $request)
+    {
         $post = (object) $request->get_body_params();
 
         if(empty((array) $post)) {
@@ -74,6 +81,7 @@ class AryaApi
 
         $id = wp_insert_post([
             'post_title' => $post->title,
+            'post_name' => $post->slug,
             'post_excerpt' => $post->excerpt,
             'post_status' => $post->status,
             'post_content' => $post->content,
@@ -83,8 +91,17 @@ class AryaApi
             return ['result' => false, 'error' => $id];
         }
 
+        if(!empty($post->metas)) {
+            AryaWp::createCustomFieldsByPostId($post->metas, $id);
+        }
+
         set_post_thumbnail( $id,  $post->image_id);
 
         return ['result' => true, 'id' => $id, 'url' => get_permalink($id)];
+    }
+
+    public function checkStatus(WP_REST_Request $request = null)
+    {
+        return ['result' => true];
     }
 }

@@ -10,11 +10,11 @@ namespace Blogging;
 
 use JWT;
 
-class AryaWp
+class AryaWp extends AryaApi
 {
     public function __construct()
     {
-        add_action('rest_api_init', [AryaApi::class, 'registerEndpoints']);
+        add_action('rest_api_init', [$this, 'registerEndpoints']);
     }
 
     public static function isAllowToCreatePost($request) {
@@ -47,5 +47,11 @@ class AryaWp
         file_put_contents($filename, $body);
 
         return (object) wp_upload_bits(basename($imageUrl), null, file_get_contents($filename));
+    }
+
+    public static function createCustomFieldsByPostId(array $metas, bool $id): void {
+        foreach($metas as $key => $meta) {
+            update_post_meta($id, $key, $meta);
+        }
     }
 }

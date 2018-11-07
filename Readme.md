@@ -4,6 +4,18 @@ Plugin to manage the wordpress posts via API with JWT authentication.
 ### How use it?
  If we want set a thumbnail in a post, we must upload the image first into a gallery.
 
+####  Check Arya status
+```
+GET http://example.com/wp-json/arya/v1/ping
+```
+
+###### SUCCESS 200: EXAMPLE
+```
+{
+  result: true
+}
+```
+
 #### To upload the image:
 ```
 POST http://example.com/wp-json/arya/v1/posts/image
