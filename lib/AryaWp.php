@@ -8,7 +8,7 @@
 
 namespace Blogging;
 
-use JWT;
+use Firebase\JWT\JWT;
 
 class AryaWp extends AryaApi
 {
@@ -41,15 +41,16 @@ class AryaWp extends AryaApi
     }
 
     public static function createImageFromRemoteUrl($imageUrl) {
-        $body = wp_remote_retrieve_body(wp_remote_get( $imageUrl, array( 'timeout' => 8 ) ));
+        $body = wp_remote_retrieve_body(wp_remote_get( $imageUrl, [ 'timeout' => 8  ] ));
 
         $filename = wp_upload_dir()['path'] . '/' . basename($imageUrl);
+
         file_put_contents($filename, $body);
 
         return (object) wp_upload_bits(basename($imageUrl), null, file_get_contents($filename));
     }
 
-    public static function createCustomFieldsByPostId(array $metas, bool $id): void {
+    public static function createCustomFieldsByPostId(array $metas, int $id): void {
         foreach($metas as $key => $meta) {
             update_post_meta($id, $key, $meta);
         }

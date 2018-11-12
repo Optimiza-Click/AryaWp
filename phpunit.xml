@@ -1,0 +1,27 @@
+<phpunit
+        bootstrap="tests/bootstrap.php"
+        backupGlobals="false"
+        colors="true"
+        convertErrorsToExceptions="true"
+        convertNoticesToExceptions="true"
+        convertWarningsToExceptions="false"
+        stderr="true"
+>
+    <php>
+        <const name="WP_TESTS_MULTISITE" value="1"/>
+    </php>
+    <testsuites>
+        <testsuite>
+            <directory prefix="test-" suffix=".php">./tests/</directory>
+        </testsuite>
+    </testsuites>
+
+
+    <!-- Ignore vendor tests in code coverage reports -->
+    <filter>
+
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">arya.php</directory>
+        </whitelist>
+    </filter>
+</phpunit>

@@ -1,0 +1,63 @@
+variables:
+  S3_BUCKET_NAME: "optimizaclick-docs"
+  PROJECT_NAME: "arya-wp"
+
+stages:
+  - test
+  - deploy
+
+
+test_code:
+  stage: test
+  image: gitlabnew.qdqmedia.com:4567/optimiza/docker-images:php-7.1-dev
+  services:
+      - mysql:5.7
+  variables:
+    MYSQL_ROOT_PASSWORD: root
+  script:
+      - apt-get update &&  apt-get install subversion phpunit mysql-client -y
+      - ./bin/install-wp-tests.sh arya-testing root root mysql
+      - composer update --optimize-autoloader
+      - vendor/bin/phpunit --coverage-text --colors=never --configuration phpunit.xml
+
+  coverage: /^\s*Lines:\s*\d+.\d+\%/
+  only:
+  - dev
+  - master
+  - tests
+
+docs_dev:
+  stage: deploy
+  image: ubuntu:16.04
+  environment:
+      name: DevDocs
+      url: https://s3-eu-west-1.amazonaws.com/$S3_BUCKET_NAME/$PROJECT_NAME/dev/index.html
+
+  script:
+  - apt-get update && apt-get install nodejs npm python-pip -y
+  - ln -s /usr/bin/nodejs /usr/bin/node
+  - npm install apidoc -g
+  - apidoc -i . -o apidoc/
+  - pip install awscli
+  - aws s3 sync --acl public-read apidoc/ s3://$S3_BUCKET_NAME/$PROJECT_NAME/dev/
+  only:
+  - dev
+
+docs_master:
+  stage: deploy
+  image: ubuntu:16.04
+  environment:
+      name: ProdDocs
+      url: https://s3-eu-west-1.amazonaws.com/$S3_BUCKET_NAME/$PROJECT_NAME/prod/index.html
+
+  script:
+  - apt-get update && apt-get install nodejs npm python-pip -y
+  - ln -s /usr/bin/nodejs /usr/bin/node
+  - npm install apidoc -g
+  - apidoc -i . -o apidoc/
+  - pip install awscli
+  - aws s3 sync --acl public-read apidoc/ s3://$S3_BUCKET_NAME/$PROJECT_NAME/prod/
+  only:
+  - master
+
+

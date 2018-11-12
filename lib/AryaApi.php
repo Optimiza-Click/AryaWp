@@ -14,12 +14,12 @@ class AryaApi
 {
     public function registerEndpoints()
     {
-        register_rest_route('arya/v1', '/posts/', [
+        register_rest_route('arya/v1', '/post/create', [
             'methods' => 'POST',
             'callback' => [$this, 'createPost'],
         ]);
 
-        register_rest_route('arya/v1',  '/posts/image', [
+        register_rest_route('arya/v1',  '/post/image', [
             'methods' => 'POST',
             'callback' => [$this, 'createImageByUrl'],
         ]);
@@ -34,14 +34,18 @@ class AryaApi
     {
         $parameters = (object) $request->get_params();
 
+        if(!AryaWp::isAllowToCreatePost($parameters->key)) {
+            return (object) ['result' => false, 'error' => 'The JWT auth code isn\'t correct'];
+        }
+
         if(!$parameters->image_url) {
-            return ['result' => false, 'error' => 'please send image url in the request'];
+            return (object) ['result' => false, 'error' => 'please send image url in the request'];
         }
 
         $image = AryaWp::createImageFromRemoteUrl($parameters->image_url);
 
         if(!$image) {
-            return ['result' => false, 'error' => $image];
+            return  (object) ['result' => false, 'error' => $image];
         }
 
         $attachment = [
@@ -54,7 +58,7 @@ class AryaApi
         $id = wp_insert_attachment( $attachment, $image->file, 0);
 
         if(!$id) {
-            return ['result' => false, 'error' => $id];
+            return (object) ['result' => false, 'error' => $id];
         }
 
         // i'm hating wordpress and i will hate wordpress :)
@@ -64,19 +68,19 @@ class AryaApi
 
         update_post_meta($id, '_wp_attachment_metadata', wp_generate_attachment_metadata($id, $image->file));
 
-        return ['result' => true, 'id' => $id];
+        return (object) ['result' => true, 'id' => $id];
     }
 
     public function createPost(WP_REST_Request $request)
     {
-        $post = (object) $request->get_body_params();
+        $post = (object) $request->get_params();
 
-        if(empty((array) $post)) {
-            return ['result' => false, 'error' => 'Complete fields first'];
+        if(!AryaWp::isAllowToCreatePost($post->key)) {
+            return (object) ['result' => false, 'error' => 'The JWT auth code isn\'t correct'];
         }
 
-        if(!AryaWp::isAllowToCreatePost($post->auth)) {
-            return ['result' => false, 'error' => 'The JWT auth code isn\'t correct'];
+        if(empty((array) $post)) {
+            return (object) ['result' => false, 'error' => 'Complete fields first'];
         }
 
         $id = wp_insert_post([
@@ -88,20 +92,22 @@ class AryaApi
         ]);
 
         if(!$id) {
-            return ['result' => false, 'error' => $id];
+            return (object) ['result' => false, 'error' => $id];
         }
 
         if(!empty($post->metas)) {
             AryaWp::createCustomFieldsByPostId($post->metas, $id);
         }
 
-        set_post_thumbnail( $id,  $post->image_id);
+        if(isset($post->image_id)) {
+            set_post_thumbnail( $id,  $post->image_id);
+        }
 
-        return ['result' => true, 'id' => $id, 'url' => get_permalink($id)];
+        return (object) ['result' => true, 'id' => $id, 'url' => get_permalink($id)];
     }
 
     public function checkStatus(WP_REST_Request $request = null)
     {
-        return ['result' => true];
+        return (object) ['result' => true];
     }
 }
